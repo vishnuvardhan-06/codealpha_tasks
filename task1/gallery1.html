@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comic Image Gallery</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', Arial, sans-serif; 
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298); 
+            text-align: center;
+            color: #fff;
+        }
+
+        .folder-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .folder {
+            background: linear-gradient(to bottom, #ff6b6b, #ff8787); 
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            width: 150px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .folder:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .gallery-container {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1); 
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .gallery img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 2px solid #ffd700; 
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+            border-color: #ff4500; 
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            max-width: 80%;
+            max-height: 80%;
+            margin: auto;
+            display: block;
+            border: 3px solid #00ffcc; 
+        }
+
+        .close, .back-btn, .home-btn, .gallery-home-btn {
+            position: absolute;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .close:hover, .back-btn:hover, .home-btn:hover, .gallery-home-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .close { right: 30px; top: 20px; }
+        .back-btn { left: 30px; top: 20px; }
+        .home-btn { right: 100px; top: 20px; } 
+        .gallery-home-btn { top: 20px; right: 20px; } 
+
+        .prev, .next {
+            position: absolute;
+            top: 50%;
+            width: auto;
+            padding: 16px;
+            color: #ffd700; 
+            font-weight: bold;
+            font-size: 24px;
+            cursor: pointer;
+            user-select: none;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+        }
+
+        .prev { left: 20px; }
+        .next { right: 20px; }
+
+        h1, h2 {
+            color: #ffd700; 
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Folder Selection Screen (Home) -->
+    <div id="folderScreen">
+        <h1>Choose Your Comic Universe</h1>
+        <div class="folder-container">
+            <div class="folder" onclick="showGallery('marvel')">Marvel</div>
+            <div class="folder" onclick="showGallery('dc')">DC</div>
+        </div>
+    </div>
+
+    <!-- Marvel Gallery -->
+    <div id="marvelGallery" class="gallery-container">
+        <h2>Marvel Gallery</h2>
+        <span class="gallery-home-btn" onclick="backToHome()">🏠 Home</span>
+        <div class="gallery">
+            <img src="V:\internship\IM.jpeg" alt="Iron Man">
+            <img src="V:\internship\SM.jpeg" alt="Spider-Man">
+            <img src="V:\internship\Thor.jpeg" alt="Thor">
+        </div>
+    </div>
+
+    <!-- DC Gallery -->
+    <div id="dcGallery" class="gallery-container">
+        <h2>DC Gallery</h2>
+        <span class="gallery-home-btn" onclick="backToHome()">🏠 Home</span>
+        <div class="gallery">
+            <img src="V:\internship\BM.jpeg" alt="Batman">
+            <img src="V:\internship\SUM.jpeg" alt="Superman">
+            <img src="V:\internship\WM.jpeg" alt="Wonder Woman">
+        </div>
+    </div>
+
+    <!-- Modal for Full-Size Images -->
+    <div class="modal">
+        <span class="close">×</span>
+        <span class="back-btn">← Back</span>
+        <span class="home-btn">🏠 Home</span>
+        <img class="modal-content" id="modalImage">
+        <div class="prev">❮</div>
+        <div class="next">❯</div>
+    </div>
+
+    <script>
+        const folderScreen = document.getElementById('folderScreen');
+        const marvelGallery = document.getElementById('marvelGallery');
+        const dcGallery = document.getElementById('dcGallery');
+        const modal = document.querySelector('.modal');
+        const modalImage = document.getElementById('modalImage');
+        const closeBtn = document.querySelector('.close');
+        const backBtn = document.querySelector('.back-btn');
+        const homeBtn = document.querySelector('.home-btn');
+        const prevBtn = document.querySelector('.prev');
+        const nextBtn = document.querySelector('.next');
+        let currentImages = [];
+        let currentIndex = 0;
+        let currentFolder = '';
+
+        
+        function showGallery(folder) {
+            folderScreen.style.display = 'none';
+            currentFolder = folder;
+            if (folder === 'marvel') {
+                marvelGallery.style.display = 'block';
+                dcGallery.style.display = 'none';
+                currentImages = Array.from(marvelGallery.querySelectorAll('img'));
+            } else if (folder === 'dc') {
+                dcGallery.style.display = 'block';
+                marvelGallery.style.display = 'none';
+                currentImages = Array.from(dcGallery.querySelectorAll('img'));
+            }
+            setupImageClicks();
+        }
+
+        
+        function setupImageClicks() {
+            currentImages.forEach((img, index) => {
+                img.onclick = () => {
+                    modal.style.display = 'flex';
+                    modalImage.src = img.src;
+                    currentIndex = index;
+                };
+            });
+        }
+
+        
+        closeBtn.onclick = () => modal.style.display = 'none';
+
+        
+        backBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+
+        
+        function backToHome() {
+            modal.style.display = 'none';
+            marvelGallery.style.display = 'none';
+            dcGallery.style.display = 'none';
+            folderScreen.style.display = 'block';
+        }
+
+        homeBtn.onclick = backToHome; 
+
+        
+        prevBtn.onclick = () => {
+            currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+            modalImage.src = currentImages[currentIndex].src;
+        };
+
+        
+        nextBtn.onclick = () => {
+            currentIndex = (currentIndex + 1) % currentImages.length;
+            modalImage.src = currentImages[currentIndex].src;
+        };
+
+        
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        };
+
+        
+        document.addEventListener('keydown', (e) => {
+            if (modal.style.display === 'flex') {
+                if (e.key === 'ArrowLeft') prevBtn.click();
+                if (e.key === 'ArrowRight') nextBtn.click();
+                if (e.key === 'Escape') closeBtn.click();
+                if (e.key === 'Home') homeBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
